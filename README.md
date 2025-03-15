@@ -4,7 +4,7 @@
 
 A complete Delphi/FreePascal interface for the [PlutoVG](https://github.com/sammycage/plutovg) 2D vector graphics library.
 
-![image info](./images/LazDemo.png)
+![image info](./images/LazDemo.PNG)
 
 ## Overview
 

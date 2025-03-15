@@ -77,7 +77,7 @@ end;
    - Canvas operations - Functions for actual drawing operations
 
 
-#License
+# License
 
 This binding is licensed under the MIT License, the same as the original PlutoVG library.
 Acknowledgements

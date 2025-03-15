@@ -1,0 +1,19 @@
+object Form1: TForm1
+  Left = 256
+  Height = 665
+  Top = 145
+  Width = 803
+  Caption = 'PLutoVG Lazarus Demo'
+  ClientHeight = 665
+  ClientWidth = 803
+  LCLVersion = '4.99.0.0'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object PaintBox1: TPaintBox
+    Left = 0
+    Height = 576
+    Top = 0
+    Width = 804
+    OnPaint = PaintBox1Paint
+  end
+end

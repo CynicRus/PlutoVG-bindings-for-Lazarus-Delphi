@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2025.03.15 19:36:53.956,=C:\Users\Cynic\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2025.03.15 19:38:08.432,G:\Coding\LazPlutoVG\VCL_D12_Demo\main.dfm=C:\Users\Cynic\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2025.03.15 19:38:08.432,G:\Coding\LazPlutoVG\VCL_D12_Demo\main.pas=C:\Users\Cynic\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2025.03.15 19:38:23.058,G:\Coding\LazPlutoVG\VCL_D12_Demo\demo.dproj=C:\Users\Cynic\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2025.03.15 19:39:03.366,=G:\Coding\LazPlutoVG\src\plutovg_api.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -4,6 +4,8 @@
 
 A complete Delphi/FreePascal interface for the [PlutoVG](https://github.com/sammycage/plutovg) 2D vector graphics library.
 
+![image info](./images/LazDemo.png)
+
 ## Overview
 
 PlutoVG is a standalone 2D vector graphics library written in C. These bindings provide a full Delphi/FreePascal interface to all PlutoVG functionality, allowing you to:

@@ -44,7 +44,6 @@ uses
   {$ENDIF}
 
 const
-    // Определяем имя библиотеки в зависимости от платформы
   {$IFDEF MSWINDOWS}
   PLUTOVG_LIB = 'libplutovg.dll';
   {$ENDIF}
@@ -52,7 +51,7 @@ const
     {$IFDEF DARWIN}  // macOS
       PLUTOVG_LIB = 'libplutovg.dylib';
     {$ELSE}          // Linux и другие UNIX-системы
-      PLUTOVG_LIB = '/usr/local/lib64/libplutovg.so';
+      PLUTOVG_LIB = 'libplutovg.so';
     {$ENDIF}
   {$ENDIF}
 type

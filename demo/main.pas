@@ -32,7 +32,9 @@ procedure SurfaceToImage(Surface: plutovg_surface_t; Image: TBitmap);
 var
   Data: PByte;
   Width, Height, Stride: Integer;
-  Row: Integer;
+  Row, Col: Integer;
+  SrcPixel, DstPixel: PCardinal;
+  R, G, B, A: Byte;
 begin
   Width := plutovg_surface_get_width(Surface);
   Height := plutovg_surface_get_height(Surface);
@@ -42,12 +44,41 @@ begin
   Image.SetSize(Width, Height);
   Image.PixelFormat := pf32bit;
 
-  // Копируем данные из поверхности PlutoVG в TBitmap
+  {$IFDEF MSWINDOWS}
+  // Под Windows просто копируем данные
   for Row := 0 to Height - 1 do
   begin
     Move(Data^, Image.ScanLine[Row]^, Width * 4);
     Inc(Data, Stride);
   end;
+  {$ELSE}
+  // Под Linux и другими ОС преобразуем порядок байтов
+  for Row := 0 to Height - 1 do
+  begin
+    SrcPixel := PCardinal(Data);
+    DstPixel := PCardinal(Image.ScanLine[Row]);
+
+    for Col := 0 to Width - 1 do
+    begin
+      // Меняем порядок R и B каналов
+      // RGBA (PlutoVG) -> BGRA (TBitmap на Linux)
+      R := Byte(SrcPixel^ and $FF);
+      G := Byte((SrcPixel^ shr 8) and $FF);
+      B := Byte((SrcPixel^ shr 16) and $FF);
+      A := Byte((SrcPixel^ shr 24) and $FF);
+
+      DstPixel^ := (Cardinal(A) shl 24) or
+                  (Cardinal(R) shl 16) or
+                  (Cardinal(G) shl 8) or
+                  Cardinal(B);
+
+      Inc(SrcPixel);
+      Inc(DstPixel);
+    end;
+
+    Inc(Data, Stride);
+  end;
+  {$ENDIF}
 end;
 
 {$R *.lfm}
@@ -91,16 +122,17 @@ var
   TempBitmap: TBitmap;
   Stops: array[0..1] of plutovg_gradient_stop_t;
   Matrix: plutovg_matrix_t;
+  C: plutovg_color_t;
 begin
-  // Создаем поверхность PlutoVG
-  Surface := plutovg_surface_create(PaintBox1.Width, PaintBox1.Height);
+
+  Surface := plutovg_surface_create(PaintBox1.Width,
+                                              PaintBox1.Height);
   if Surface = nil then
   begin
     ShowMessage('Не удалось создать поверхность PlutoVG');
     Exit;
   end;
 
-  // Создаем канвас
   Canvas := plutovg_canvas_create(Surface);
   if Canvas = nil then
   begin
@@ -111,17 +143,20 @@ begin
 
   try
     // Заливаем фон белым цветом
+    {$IFDEF WINDOWS}
     plutovg_surface_clear(Surface, PLUTOVG_WHITE_COLOR);
-
+    {$ELSE}
+    plutovg_surface_clear(Surface, @PLUTOVG_WHITE_COLOR);
+    {$ENDIF}
     // 1. Рисуем прямоугольник с заливкой красным цветом
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_RED_COLOR);
+    plutovg_canvas_set_color(Canvas, @PLUTOVG_RED_COLOR);
     plutovg_canvas_fill_rect(Canvas, 50, 50, 100, 80);
     plutovg_canvas_restore(Canvas);
 
     // 2. Рисуем прямоугольник без заливки (только контур) синим цветом
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_BLUE_COLOR);
+    plutovg_canvas_set_color(Canvas, @PLUTOVG_BLUE_COLOR);
     plutovg_canvas_set_line_width(Canvas, 2);
     plutovg_canvas_rect(Canvas, 200, 50, 100, 80);
     plutovg_canvas_stroke(Canvas);
@@ -129,14 +164,15 @@ begin
 
     // 3. Рисуем круг с зеленой заливкой
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_GREEN_COLOR);
+    plutovg_canvas_set_color(Canvas, @PLUTOVG_GREEN_COLOR);
     plutovg_canvas_circle(Canvas, 100, 200, 40);
     plutovg_canvas_fill(Canvas);
     plutovg_canvas_restore(Canvas);
 
     // 4. Рисуем эллипс с контуром и без заливки
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_MAKE_COLOR(0.5, 0, 0.5, 1)); // Фиолетовый
+    C := PLUTOVG_MAKE_COLOR(0.5, 0, 0.5, 1);
+    plutovg_canvas_set_color(Canvas, @C); // Фиолетовый
     plutovg_canvas_set_line_width(Canvas, 3);
     plutovg_canvas_ellipse(Canvas, 250, 200, 60, 40);
     plutovg_canvas_stroke(Canvas);
@@ -144,7 +180,8 @@ begin
 
     // 5. Создаем и рисуем путь произвольной формы (пятиугольник)
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_MAKE_COLOR(1, 0.5, 0, 1)); // Оранжевый
+    C:= PLUTOVG_MAKE_COLOR(1, 0.5, 0, 1);
+    plutovg_canvas_set_color(Canvas, @C); // Оранжевый
     plutovg_canvas_move_to(Canvas, 400, 100);
     plutovg_canvas_line_to(Canvas, 450, 50);
     plutovg_canvas_line_to(Canvas, 500, 100);
@@ -161,7 +198,7 @@ begin
     Stops[0].color := PLUTOVG_MAKE_COLOR(0, 0, 1, 1); // Синий
     Stops[1].offset := 1;
     Stops[1].color := PLUTOVG_MAKE_COLOR(0, 1, 1, 1); // Голубой
-    matrix := PLUTOVG_IDENTITY_MATRIX;
+    matrix := @PLUTOVG_IDENTITY_MATRIX;
     plutovg_canvas_set_linear_gradient(Canvas, 350, 200, 550, 280,
                                       PLUTOVG_SPREAD_METHOD_PAD, @Stops[0], 2, matrix);
     plutovg_canvas_round_rect(Canvas, 350, 200, 200, 80, 15, 15);
@@ -170,7 +207,8 @@ begin
 
     // 7. Рисуем дугу с контуром
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_MAKE_COLOR(0.7, 0, 0, 1)); // Темно-красный
+    C:= PLUTOVG_MAKE_COLOR(0.7, 0, 0, 1);
+    plutovg_canvas_set_color(Canvas, @C); // Темно-красный
     plutovg_canvas_set_line_width(Canvas, 4);
     plutovg_canvas_arc(Canvas, 100, 350, 50, 0, PLUTOVG_PI, False);
     plutovg_canvas_stroke(Canvas);
@@ -178,7 +216,7 @@ begin
 
     // 8. Рисуем линию с пунктирным контуром
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_BLACK_COLOR);
+    plutovg_canvas_set_color(Canvas, @PLUTOVG_BLACK_COLOR);
     plutovg_canvas_set_line_width(Canvas, 2);
     plutovg_canvas_set_dash(Canvas, 0, @dashes[0], 2);
     plutovg_canvas_move_to(Canvas, 200, 350);
@@ -188,7 +226,8 @@ begin
 
     // 9. Рисуем кривую Безье
     plutovg_canvas_save(Canvas);
-    plutovg_canvas_set_color(Canvas, PLUTOVG_MAKE_COLOR(0, 0.5, 0, 1)); // Темно-зеленый
+    C:=PLUTOVG_MAKE_COLOR(0, 0.5, 0, 1);
+    plutovg_canvas_set_color(Canvas, @C); // Темно-зеленый
     plutovg_canvas_set_line_width(Canvas, 2);
     plutovg_canvas_move_to(Canvas, 400, 350);
     plutovg_canvas_cubic_to(Canvas, 450, 300, 500, 400, 550, 350);
@@ -200,17 +239,17 @@ begin
     begin
       plutovg_canvas_save(Canvas);
       plutovg_canvas_set_font(Canvas, FFont, 24);
-      plutovg_canvas_set_color(Canvas, PLUTOVG_BLACK_COLOR);
+      plutovg_canvas_set_color(Canvas, @PLUTOVG_BLACK_COLOR);
       plutovg_canvas_fill_text(Canvas, PAnsiChar('PlutoVG Demo'), -1, PLUTOVG_TEXT_ENCODING_UTF8, 50, 500);
-
+      plutovg_canvas_restore(Canvas);
+      plutovg_canvas_save(Canvas);
       // Второй текст с другим цветом и размером
-      plutovg_canvas_set_font_size(Canvas, 18);
-      plutovg_canvas_set_color(Canvas, PLUTOVG_MAKE_COLOR(0.5, 0, 0.5, 1)); // Фиолетовый
+      plutovg_canvas_set_font(Canvas, FFont, 18);
+      C:=PLUTOVG_MAKE_COLOR(0.5, 0, 0.5, 1);
+      plutovg_canvas_set_color(Canvas, @C); // Фиолетовый
       plutovg_canvas_fill_text(Canvas, PAnsiChar('Графические примитивы'), -1, PLUTOVG_TEXT_ENCODING_UTF8, 50, 530);
       plutovg_canvas_restore(Canvas);
     end;
-
-    // Отрисовываем результат на PaintBox
     TempBitmap := TBitmap.Create;
     try
       SurfaceToImage(Surface, TempBitmap);
@@ -234,4 +273,3 @@ end;
 
 
 end.
-

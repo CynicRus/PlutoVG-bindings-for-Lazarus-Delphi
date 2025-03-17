@@ -52,7 +52,7 @@ const
     {$IFDEF DARWIN}  // macOS
       PLUTOVG_LIB = 'libplutovg.dylib';
     {$ELSE}          // Linux и другие UNIX-системы
-      PLUTOVG_LIB = 'libplutovg.so';
+      PLUTOVG_LIB = '/usr/local/lib64/libplutovg.so';
     {$ENDIF}
   {$ENDIF}
 type
@@ -65,7 +65,8 @@ type
   end;
 
   // Прямоугольник в 2D-пространстве
-  plutovg_rect_t = record
+  plutovg_rect_t = ^plutovg_rect;
+  plutovg_rect = record
     x: single;
     y: single;
     w: single;
@@ -73,7 +74,8 @@ type
   end;
 
   // Матрица преобразования 2D
-  plutovg_matrix_t = record
+  plutovg_matrix_t = ^plutovg_matrix;
+  plutovg_matrix = record
     a: single;
     b: single;
     c: single;
@@ -176,8 +178,8 @@ const
 
   // Пустые значения для структур
   PLUTOVG_EMPTY_POINT: plutovg_point_t = (x: 0; y: 0);
-  PLUTOVG_EMPTY_RECT: plutovg_rect_t = (x: 0; y: 0; w: 0; h: 0);
-  PLUTOVG_IDENTITY_MATRIX: plutovg_matrix_t = (a: 1; b: 0; c: 0; d: 1; e: 0; f: 0);
+  PLUTOVG_EMPTY_RECT: plutovg_rect = (x: 0; y: 0; w: 0; h: 0);
+  PLUTOVG_IDENTITY_MATRIX: plutovg_matrix = (a: 1; b: 0; c: 0; d: 1; e: 0; f: 0);
 
 type
   // Определение указателей
@@ -435,27 +437,27 @@ function plutovg_font_face_text_extents(face: plutovg_font_face_t;
   var extents: plutovg_rect_t): single; cdecl; external PLUTOVG_LIB;
 
 // Функции цвета
-procedure plutovg_color_init_rgb(var color: plutovg_color_t; r, g, b: single);
+procedure plutovg_color_init_rgb(var color: pplutovg_color_t; r, g, b: single);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_rgba(var color: plutovg_color_t; r, g, b, a: single);
+procedure plutovg_color_init_rgba(var color: pplutovg_color_t; r, g, b, a: single);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_rgb8(var color: plutovg_color_t; r, g, b: integer);
+procedure plutovg_color_init_rgb8(var color: pplutovg_color_t; r, g, b: integer);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_rgba8(var color: plutovg_color_t; r, g, b, a: integer);
+procedure plutovg_color_init_rgba8(var color: pplutovg_color_t; r, g, b, a: integer);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_rgba32(var color: plutovg_color_t; Value: cardinal);
+procedure plutovg_color_init_rgba32(var color: pplutovg_color_t; Value: cardinal);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_argb32(var color: plutovg_color_t; Value: cardinal);
+procedure plutovg_color_init_argb32(var color: pplutovg_color_t; Value: cardinal);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_hsl(var color: plutovg_color_t; h, s, l: single);
+procedure plutovg_color_init_hsl(var color: pplutovg_color_t; h, s, l: single);
   cdecl; external PLUTOVG_LIB;
-procedure plutovg_color_init_hsla(var color: plutovg_color_t; h, s, l, a: single);
+procedure plutovg_color_init_hsla(var color: pplutovg_color_t; h, s, l, a: single);
   cdecl; external PLUTOVG_LIB;
-function plutovg_color_to_rgba32(const color: plutovg_color_t): cardinal;
+function plutovg_color_to_rgba32(const color: pplutovg_color_t): cardinal;
   cdecl; external PLUTOVG_LIB;
-function plutovg_color_to_argb32(const color: plutovg_color_t): cardinal;
+function plutovg_color_to_argb32(const color: pplutovg_color_t): cardinal;
   cdecl; external PLUTOVG_LIB;
-function plutovg_color_parse(var color: plutovg_color_t; Data: pansichar;
+function plutovg_color_parse(var color: pplutovg_color_t; Data: pansichar;
   length: integer): integer; cdecl; external PLUTOVG_LIB;
 
 // Функции поверхности
@@ -541,7 +543,7 @@ procedure plutovg_canvas_set_rgb(canvas: plutovg_canvas_t; r, g, b: single);
 procedure plutovg_canvas_set_rgba(canvas: plutovg_canvas_t; r, g, b, a: single);
   cdecl; external PLUTOVG_LIB;
 procedure plutovg_canvas_set_color(canvas: plutovg_canvas_t;
-  const color: plutovg_color_t); cdecl; external PLUTOVG_LIB;
+  const color: pplutovg_color_t); cdecl; external PLUTOVG_LIB;
 procedure plutovg_canvas_set_linear_gradient(canvas: plutovg_canvas_t;
   x1, y1, x2, y2: single; spread: plutovg_spread_method_t;
   stops: Pplutovg_gradient_stop_t; nstops: integer; const matrix: plutovg_matrix_t);
